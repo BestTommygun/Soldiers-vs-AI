@@ -10,11 +10,12 @@ public class DroneCollision : MonoBehaviour
     [ShowOnly] public Vector3 knockback;
     private Rigidbody rigidbody;
     private LineRenderer lineRenderer;
-
+    private DroneTargetting droneTargetting;
     private void Start()
     {
         fde = transform.gameObject.GetComponent<Drone_FDE>();
         rigidbody = transform.gameObject.GetComponent<Rigidbody>();
+        droneTargetting = transform.gameObject.GetComponent<DroneTargetting>();
 
         //initialize line renderer
         lineRenderer = transform.gameObject.GetComponent<LineRenderer>();
@@ -57,7 +58,7 @@ public class DroneCollision : MonoBehaviour
         // Calculate knockback
         Vector3 newKnockback = transform.position - collision.transform.position;
         newKnockback = newKnockback.normalized;
-        newKnockback *= 75;
+        newKnockback *= 25;
         knockback = newKnockback;
     }
 }
