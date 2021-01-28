@@ -45,20 +45,24 @@ public class DroneCollision : MonoBehaviour
     }
     void OnCollisionEnter(Collision collision)
     {
-        // Instantiate collision prop
-        ContactPoint contact = collision.contacts[0];
-        Quaternion rotation = Quaternion.FromToRotation(Vector3.up, contact.normal);
-        Vector3 position = contact.point;
-        Instantiate(CollisionPrefab, position, rotation);
-       
-        // Change health
-        HealthManager otherHealth = collision.gameObject.GetComponent<HealthManager>();
-        otherHealth.ChangeHealth(-Damage);
+        if(collision.gameObject.tag != "Indestructible object")
+        {
+            // Instantiate collision prop
+            ContactPoint contact = collision.contacts[0];
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.up, contact.normal);
+            Vector3 position = contact.point;
+            Instantiate(CollisionPrefab, position, rotation);
 
-        // Calculate knockback
-        Vector3 newKnockback = transform.position - collision.transform.position;
-        newKnockback = newKnockback.normalized;
-        newKnockback *= 25;
-        knockback = newKnockback;
+            // Change health
+            HealthManager otherHealth = collision.gameObject.GetComponent<HealthManager>();
+            if(otherHealth != null)
+                otherHealth.ChangeHealth(-Damage);
+
+            // Calculate knockback
+            Vector3 newKnockback = transform.position - collision.transform.position;
+            newKnockback = newKnockback.normalized;
+            newKnockback *= 25;
+            knockback = newKnockback;
+        }
     }
 }

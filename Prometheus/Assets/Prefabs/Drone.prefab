@@ -303,10 +303,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
+  hasTarget: 0
   force: {x: 0, y: 0, z: 0}
   Drag: 0.05
   maxAcceleration: 50
-  speed: 12
+  speed: 3
   perceivedDrones: []
   wander_angle: 35
   TargetAttraction: 1

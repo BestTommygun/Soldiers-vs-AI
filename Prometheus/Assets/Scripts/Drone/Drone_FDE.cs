@@ -5,12 +5,13 @@ using UnityEngine;
 public class Drone_FDE : MonoBehaviour
 {
     public GameObject target;
-    private bool hasTarget;
+    [ShowOnly]
+    public bool hasTarget;
     [ShowOnly]
     public Vector3 force;
     public float Drag = 0.10f;
     public float maxAcceleration = 50.0f;
-    public float speed = 30;
+    public float speed = 12;
     private Vector3 dragVector;
     private Rigidbody rigidbody;
     private LineRenderer lineRenderer;
@@ -53,14 +54,14 @@ public class Drone_FDE : MonoBehaviour
         DroneAttraction     = 1f;
         Cohesion            = 0.12f;
         Seperation          = 0.23f;
-        Alignment           = 0.1f;
+        Alignment           = 0.01f;
 
         TopAttr     = -0.2f;
         BottomAttr  = -0.2f;
-        LeftAttr    = -0.1f;
-        ForwardAttr = -0.1f;
-        RightAttr   = -0.1f;
-        BackAttr    = -0.1f;
+        LeftAttr    = -0.6f;
+        ForwardAttr = -0.6f;
+        RightAttr   = -0.6f;
+        BackAttr    = -0.6f;
 
         //initialize line renderer
         lineRenderer = transform.gameObject.GetComponent<LineRenderer>();
@@ -76,7 +77,7 @@ public class Drone_FDE : MonoBehaviour
 
     void Update()
     {
-        if (hasTarget) hasTarget = target != null;
+        hasTarget = target != null;
         for (int i = 0; i < perceivedDrones.Count; i++)
         {
             if (perceivedDrones[i] == null) perceivedDrones.RemoveAt(i);
@@ -159,55 +160,60 @@ public class Drone_FDE : MonoBehaviour
         Vector3 displacement = new Vector3(Mathf.Cos(wander_angle) * -wander_radius, 0, Mathf.Sin(wander_angle) * -wander_radius);
         float distance = 0.001f;
         wander_angle += Mathf.Rad2Deg * Random.Range(-distance * Mathf.PI, distance * Mathf.PI);
-
-        force += (center + displacement);
+        float wander = 0.02f;
+        force += (center + displacement) * wander;
     }
     #endregion
     public void CalcRayAttractions()
     {
-        //up, down, left, forward, right, backward
-        if (Top.point.magnitude > 0) force += Vector3.MoveTowards(force, Top.point, -1 * TopAttr * Time.deltaTime);
-        if (Bottom.point.magnitude > 0) force += Vector3.MoveTowards(force, transform.position - Bottom.point, -1 * BottomAttr);
-        if (Left.point.magnitude > 0) force += Vector3.MoveTowards(force, transform.position - Left.point, -1 * LeftAttr);
-        if (Forward.point.magnitude > 0) force += Vector3.MoveTowards(force, transform.position - Forward.point, -1 * ForwardAttr);
-        if (Right.point.magnitude > 0) force += Vector3.MoveTowards(force, transform.position - Right.point, -1 * RightAttr);
-        if (Backward.point.magnitude > 0) force += Vector3.MoveTowards(force, transform.position - Backward.point, -1 * BackAttr);
+        if (Top.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Top.point.y) * -TopAttr, 0);
+        if (Bottom.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Bottom.point.y) * -BottomAttr, 0);
+        if (Left.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Left.point.x) * -LeftAttr, 0, 0);
+        if (Right.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Right.point.x) * -RightAttr, 0, 0);
+        if (Forward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Forward.point.z) * -ForwardAttr);
+        if (Backward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Backward.point.z) * -BackAttr);
     }
     public void CalcRayCasts()
     {
         // Bit shift the index of the layer (8) to get a bit mask
         int layerMask = 1 << 8;
-
+        layerMask |= 1 << 9;
         // This would cast rays only against colliders in layer 8.
         // But instead we want to collide against everything except layer 8. The ~ operator does this, it inverts a bitmask.
         layerMask = ~layerMask;
-        float horizontalConstant = 0.75f;
+        float horizontalConstant = 0.01f;
         float verticalConstant = 0.01f;
         float rayLength = 3;
-        if (Physics.Raycast(transform.position + transform.TransformDirection(Vector3.up) * verticalConstant, transform.TransformDirection(Vector3.up), out Top, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.up) * verticalConstant, transform.TransformDirection(Vector3.up) * Top.distance, Color.cyan);
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.up), out Top, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.up) * Top.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.up) * verticalConstant, transform.TransformDirection(Vector3.up) * rayLength, Color.yellow);
-        if(Physics.Raycast(transform.position + transform.TransformDirection(Vector3.up * -1) * verticalConstant, transform.TransformDirection(Vector3.up * -1), out Bottom, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.up * -1) * verticalConstant, transform.TransformDirection(Vector3.up * -1) * Bottom.distance, Color.cyan);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.up) * rayLength, Color.green);
+
+        if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.up * -1), out Bottom, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.up * -1) * Bottom.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.up * -1) * verticalConstant, transform.TransformDirection(Vector3.up * -1) * rayLength, Color.yellow);
-        if (Physics.Raycast(transform.position + transform.TransformDirection(Vector3.right * -1) * horizontalConstant, transform.TransformDirection(Vector3.right * -1), out Left, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.right * -1) * horizontalConstant, transform.TransformDirection(Vector3.right * -1) * Left.distance, Color.cyan);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.up * -1) * rayLength, Color.yellow);
+
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.right * -1), out Left, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right * -1) * Left.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.right * -1) * horizontalConstant, transform.TransformDirection(Vector3.right * -1) * rayLength, Color.yellow);
-        if (Physics.Raycast(transform.position + transform.TransformDirection(Vector3.forward) * horizontalConstant, transform.TransformDirection(Vector3.forward), out Forward, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.forward) * horizontalConstant, transform.TransformDirection(Vector3.forward) * Forward.distance, Color.cyan);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right * -1) * rayLength, Color.yellow);
+
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out Forward, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * Forward.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.forward) * horizontalConstant, transform.TransformDirection(Vector3.forward) * rayLength, Color.yellow);
-        if (Physics.Raycast(transform.position + transform.TransformDirection(Vector3.right) * horizontalConstant, transform.TransformDirection(Vector3.right), out Right, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.right) * horizontalConstant, transform.TransformDirection(Vector3.right) * Right.distance, Color.cyan);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * rayLength, Color.blue);
+
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.right), out Right, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right) * Right.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.right) * horizontalConstant, transform.TransformDirection(Vector3.right) * rayLength, Color.yellow);
-        if (Physics.Raycast(transform.position + transform.TransformDirection(Vector3.forward * -1) * horizontalConstant, transform.TransformDirection(Vector3.forward * -1), out Backward, rayLength, layerMask))
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.forward * -1) * horizontalConstant, transform.TransformDirection(Vector3.forward * -1) * Backward.distance, Color.cyan);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right) * rayLength, Color.red);
+
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward * -1), out Backward, rayLength, layerMask))
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward * -1) * Backward.distance, Color.cyan);
         else
-            Debug.DrawRay(transform.position + transform.TransformDirection(Vector3.forward * -1) * horizontalConstant, transform.TransformDirection(Vector3.forward * -1) * rayLength, Color.yellow);
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward * -1) * rayLength, Color.yellow);
+
     }
     public void DrawLine(Vector3 first, Vector3 second)
     {
