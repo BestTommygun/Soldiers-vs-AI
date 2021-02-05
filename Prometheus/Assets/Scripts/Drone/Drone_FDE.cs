@@ -5,17 +5,16 @@ using UnityEngine;
 public class Drone_FDE : MonoBehaviour
 {
     public GameObject target;
-    [ShowOnly]
-    public bool hasTarget;
-    [ShowOnly]
-    public Vector3 force;
+    [ShowOnly] public bool hasTarget;
+    [ShowOnly] public Vector3 force;
+
     public float Drag = 0.10f;
     public float maxAcceleration = 50.0f;
-    public float speed = 12;
+    public float speed = 12f;
     private Vector3 dragVector;
     private Rigidbody rigidbody;
     private LineRenderer lineRenderer;
-    public List<GameObject> perceivedDrones;
+    public TriggerCollider TriggerCollider;
     [ShowOnly] public float wander_angle = 0; //degrees
     #region Attractions and repulsions
     [Header("FDE attractions")]
@@ -48,20 +47,22 @@ public class Drone_FDE : MonoBehaviour
         rigidbody = transform.gameObject.GetComponent<Rigidbody>();
         hasTarget = target != null;
         rigidbody.drag = Drag;
-        perceivedDrones = new List<GameObject>();
+        TriggerCollider = gameObject.GetComponent<TriggerCollider>();
+        if (TriggerCollider != null) Debug.LogError("TriggerCollider not properly set up.");
+        TriggerCollider.validTags.Add("Soldier");
 
         TargetAttraction    = 1f;
         DroneAttraction     = 1f;
-        Cohesion            = 0.12f;
-        Seperation          = 0.23f;
+        Cohesion            = 0.06f;
+        Seperation          = 0.12f;
         Alignment           = 0.01f;
 
-        TopAttr     = -0.2f;
-        BottomAttr  = -0.2f;
-        LeftAttr    = -0.6f;
-        ForwardAttr = -0.6f;
-        RightAttr   = -0.6f;
-        BackAttr    = -0.6f;
+        TopAttr     = -0.1f;
+        BottomAttr  = -0.1f;
+        LeftAttr    = -0.2f;
+        ForwardAttr = -0.2f;
+        RightAttr   = -0.2f;
+        BackAttr    = -0.2f;
 
         //initialize line renderer
         lineRenderer = transform.gameObject.GetComponent<LineRenderer>();
@@ -77,12 +78,6 @@ public class Drone_FDE : MonoBehaviour
 
     void Update()
     {
-        hasTarget = target != null;
-        for (int i = 0; i < perceivedDrones.Count; i++)
-        {
-            if (perceivedDrones[i] == null) perceivedDrones.RemoveAt(i);
-        }
-
         force = Vector3.zero;
         CalcAtrractions();
         CalcRayCasts();
@@ -97,7 +92,7 @@ public class Drone_FDE : MonoBehaviour
     {
         if (hasTarget) CalcTargetAttraction();
         else Wander();
-        if(perceivedDrones.Count > 0)
+        if(TriggerCollider.ObjectsInRange.Count > 0)
         {
             CalcCohesion();
             CalcSeperation();
@@ -113,11 +108,11 @@ public class Drone_FDE : MonoBehaviour
     {
         Vector3 center = Vector3.zero;
 
-        for (int i = 0; i < perceivedDrones.Count; i++)
+        for (int i = 0; i < TriggerCollider.ObjectsInRange.Count; i++)
         {
-            center += perceivedDrones[i].transform.position;
+            center += TriggerCollider.ObjectsInRange[i].transform.position;
         }
-        center /= perceivedDrones.Count;
+        center /= TriggerCollider.ObjectsInRange.Count;
 
         force += (center - transform.position).normalized * Cohesion;
     }
@@ -125,9 +120,9 @@ public class Drone_FDE : MonoBehaviour
     {
         Vector3 seperation = Vector3.zero;
 
-        for (int i = 0; i < perceivedDrones.Count; i++)
+        for (int i = 0; i < TriggerCollider.ObjectsInRange.Count; i++)
         {
-            seperation += (transform.position - perceivedDrones[i].transform.position).normalized;
+            seperation += (transform.position - TriggerCollider.ObjectsInRange[i].transform.position).normalized;
         }
 
         force += (seperation.normalized * Seperation);
@@ -136,13 +131,13 @@ public class Drone_FDE : MonoBehaviour
     {
         Vector3 alignment = Vector3.zero;
 
-        for (int i = 0; i < perceivedDrones.Count; i++)
+        for (int i = 0; i < TriggerCollider.ObjectsInRange.Count; i++)
         {
-            var test = (perceivedDrones[i].transform.position + perceivedDrones[i].transform.forward).normalized;
-            alignment += perceivedDrones[i].transform.position + perceivedDrones[i].transform.forward;
+            var test = (TriggerCollider.ObjectsInRange[i].transform.position + TriggerCollider.ObjectsInRange[i].transform.forward).normalized; //TODO:
+            alignment += TriggerCollider.ObjectsInRange[i].transform.position + TriggerCollider.ObjectsInRange[i].transform.forward;
         }
 
-        alignment /= perceivedDrones.Count;
+        alignment /= TriggerCollider.ObjectsInRange.Count;
 
         force += alignment.normalized * Alignment;
     }
@@ -220,23 +215,8 @@ public class Drone_FDE : MonoBehaviour
         lineRenderer.SetPosition(0, first); //x,y and z position of the starting point of the line
         lineRenderer.SetPosition(1, second); //x,y and z position of the starting point of the line
     }
-    void OnTriggerEnter(Collider other) //TODO: cantargetfriendlies
-    {
-        if (IsDrone(other) && !perceivedDrones.Contains(other.gameObject))
-        {
-            perceivedDrones.Add(other.gameObject);
-        }
-    }
-    void OnTriggerExit(Collider other)
-    {
-        if (IsDrone(other) && perceivedDrones.Contains(other.gameObject))
-        {
-            perceivedDrones.Remove(other.gameObject);
-        }
-    }
     public void AddForce(Vector3 newForce)
     {
         force += newForce;
     }
-    private bool IsDrone(Collider other) => other.tag == tag;
 }

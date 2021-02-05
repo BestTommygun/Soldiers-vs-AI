@@ -237,6 +237,7 @@ GameObject:
   - component: {fileID: 8926879580122481658}
   - component: {fileID: 8926879580122481653}
   - component: {fileID: 8926879580122481659}
+  - component: {fileID: 7226173125588622489}
   m_Layer: 0
   m_Name: Drone
   m_TagString: Drone
@@ -307,8 +308,8 @@ MonoBehaviour:
   force: {x: 0, y: 0, z: 0}
   Drag: 0.05
   maxAcceleration: 50
-  speed: 3
-  perceivedDrones: []
+  speed: 12
+  TriggerCollider: {fileID: 0}
   wander_angle: 35
   TargetAttraction: 1
   DroneAttraction: 1
@@ -382,3 +383,19 @@ MonoBehaviour:
   curTarget: {fileID: 0}
   HasTarget: 0
   potentialTargets: []
+--- !u!114 &7226173125588622489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8926879580122481650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f77ca8ebd27f6544281710944d7724fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collider: {fileID: 0}
+  ObjectsInRange: []
+  validTags:
+  - 

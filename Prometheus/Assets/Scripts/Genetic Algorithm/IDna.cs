@@ -9,6 +9,7 @@ public enum DnaGenMode
 }
 public interface IDna
 {
-    void GenerateChild(IDna parent1, IDna parent2);
+    IDna GenerateChild(IDna parent1, IDna parent2, float mutationChance = 5f);
+
     void GenerateRandomDNA(DnaGenMode dnaGenMode = DnaGenMode.All);
 }

@@ -15,14 +15,6 @@ public class DroneCommunications : MonoBehaviour
         droneTargetting = transform.GetComponent<DroneTargetting>();
     }
 
-    private void Update()
-    {
-        for (int i = 0; i < DronesInRange.Count; i++)
-        {
-            if (DronesInRange[i] == null) DronesInRange.RemoveAt(i);
-        }
-    }
-
     private void SendMessage(DroneMessage message)
     {
         for (int i = 0; i < DronesInRange.Count; i++)
