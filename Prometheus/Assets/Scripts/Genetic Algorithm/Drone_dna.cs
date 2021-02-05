@@ -1,13 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public enum DnaGenMode
-{
-    All,
-    FDE,
-    Movement
-}
 public class Drone_dna : MonoBehaviour, IDna
 {
     #region Attractions and repulsions
@@ -25,8 +18,12 @@ public class Drone_dna : MonoBehaviour, IDna
     [ShowOnly] public float ForwardAttr = 1f;     //-1 to 1
     [ShowOnly] public float RightAttr = 1f;
     [ShowOnly] public float BackAttr = 1f;
+    public void GenerateChild(IDna parent1, IDna parent2)
+    {
+        throw new System.NotImplementedException();
+    }
     #endregion
-    
+
     public void GenerateRandomDNA(DnaGenMode dnaGenMode = DnaGenMode.All)
     {
         if(dnaGenMode == DnaGenMode.All || dnaGenMode == DnaGenMode.FDE)
