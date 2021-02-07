@@ -145,4 +145,20 @@ public class Drone_dna : MonoBehaviour, IDna
             BackAttr    = Random.Range(-1f, 1f);
         }
     }
+
+    public void GenerateHardCodedDNA() //TODO: debug function, should be removed later.
+    {
+        TargetAttraction = 1f;
+        DroneAttraction = 1f;
+        Cohesion = 0.06f;
+        Seperation = 0.12f;
+        Alignment = 0.01f;
+
+        TopAttr = -0.1f;
+        BottomAttr = -0.1f;
+        LeftAttr = -0.2f;
+        ForwardAttr = -0.2f;
+        RightAttr = -0.2f;
+        BackAttr = -0.2f;
+    }
 }

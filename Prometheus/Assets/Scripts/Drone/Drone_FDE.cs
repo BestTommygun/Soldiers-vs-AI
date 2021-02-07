@@ -7,7 +7,6 @@ public class Drone_FDE : MonoBehaviour
     public GameObject target;
     [ShowOnly] public bool hasTarget;
     [ShowOnly] public Vector3 force;
-
     public float Drag = 0.10f;
     public float maxAcceleration = 50.0f;
     public float speed = 12f;
@@ -17,21 +16,7 @@ public class Drone_FDE : MonoBehaviour
     public TriggerCollider TriggerCollider;
     [ShowOnly] public float wander_angle = 0; //degrees
     #region Attractions and repulsions
-    [Header("FDE attractions")]
-    [ShowOnly] public float TargetAttraction = 1f;    //-1 to 1
-    [ShowOnly] public float DroneAttraction = 1f;    //-1 to 1
-    [ShowOnly] public float Cohesion = 0f;     //-1 to 1
-    [ShowOnly] public float Seperation = 1f;     //-1 to 1
-    [ShowOnly] public float Alignment = 1f;     //-1 to 1
-
-    [Header("Movement attractions")]
-    [ShowOnly] public float TopAttr = 1f;    //-1 to 1
-    [ShowOnly] public float BottomAttr = 1f;    //-1 to 1
-    [ShowOnly] public float LeftAttr = 1f;     //-1 to 1
-    [ShowOnly] public float ForwardAttr = 1f;     //-1 to 1
-    [ShowOnly] public float RightAttr = 1f;
-    [ShowOnly] public float BackAttr = 1f;
-
+    [ShowOnly] public Drone_dna Dna;
     [ShowOnly] public RaycastHit Bottom;
     [ShowOnly] public RaycastHit Top;
     [ShowOnly] public RaycastHit Forward;
@@ -48,21 +33,11 @@ public class Drone_FDE : MonoBehaviour
         hasTarget = target != null;
         rigidbody.drag = Drag;
         TriggerCollider = gameObject.GetComponent<TriggerCollider>();
-        if (TriggerCollider != null) Debug.LogError("TriggerCollider not properly set up.");
+        if (TriggerCollider == null) Debug.LogError("TriggerCollider not properly set up.");
         TriggerCollider.validTags.Add("Soldier");
 
-        TargetAttraction    = 1f;
-        DroneAttraction     = 1f;
-        Cohesion            = 0.06f;
-        Seperation          = 0.12f;
-        Alignment           = 0.01f;
-
-        TopAttr     = -0.1f;
-        BottomAttr  = -0.1f;
-        LeftAttr    = -0.2f;
-        ForwardAttr = -0.2f;
-        RightAttr   = -0.2f;
-        BackAttr    = -0.2f;
+        Dna = gameObject.AddComponent<Drone_dna>();
+        Dna.GenerateHardCodedDNA();
 
         //initialize line renderer
         lineRenderer = transform.gameObject.GetComponent<LineRenderer>();
@@ -78,6 +53,7 @@ public class Drone_FDE : MonoBehaviour
 
     void Update()
     {
+        hasTarget = target != null;
         force = Vector3.zero;
         CalcAtrractions();
         CalcRayCasts();
@@ -102,7 +78,7 @@ public class Drone_FDE : MonoBehaviour
     public void CalcTargetAttraction()
     {
         Vector3 targetVector = (target.transform.position - transform.position).normalized;
-        force += targetVector * TargetAttraction;
+        force += targetVector * Dna.TargetAttraction;
     }
     public void CalcCohesion()
     {
@@ -114,7 +90,7 @@ public class Drone_FDE : MonoBehaviour
         }
         center /= TriggerCollider.ObjectsInRange.Count;
 
-        force += (center - transform.position).normalized * Cohesion;
+        force += (center - transform.position).normalized * Dna.Cohesion;
     }
     public void CalcSeperation()
     {
@@ -125,7 +101,7 @@ public class Drone_FDE : MonoBehaviour
             seperation += (transform.position - TriggerCollider.ObjectsInRange[i].transform.position).normalized;
         }
 
-        force += (seperation.normalized * Seperation);
+        force += (seperation.normalized * Dna.Seperation);
     }
     public void CalcAlignment()
     {
@@ -139,7 +115,7 @@ public class Drone_FDE : MonoBehaviour
 
         alignment /= TriggerCollider.ObjectsInRange.Count;
 
-        force += alignment.normalized * Alignment;
+        force += alignment.normalized * Dna.Alignment;
     }
     public void Wander()
     {
@@ -161,12 +137,12 @@ public class Drone_FDE : MonoBehaviour
     #endregion
     public void CalcRayAttractions()
     {
-        if (Top.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Top.point.y) * -TopAttr, 0);
-        if (Bottom.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Bottom.point.y) * -BottomAttr, 0);
-        if (Left.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Left.point.x) * -LeftAttr, 0, 0);
-        if (Right.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Right.point.x) * -RightAttr, 0, 0);
-        if (Forward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Forward.point.z) * -ForwardAttr);
-        if (Backward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Backward.point.z) * -BackAttr);
+        if (Top.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Top.point.y) * -Dna.TopAttr, 0);
+        if (Bottom.point.magnitude > 0) force += new Vector3(0, 1 / (transform.position.y - Bottom.point.y) * -Dna.BottomAttr, 0);
+        if (Left.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Left.point.x) * -Dna.LeftAttr, 0, 0);
+        if (Right.point.magnitude > 0) force += new Vector3(1 / (transform.position.x - Right.point.x) * -Dna.RightAttr, 0, 0);
+        if (Forward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Forward.point.z) * -Dna.ForwardAttr);
+        if (Backward.point.magnitude > 0) force += new Vector3(0, 0, 1 / (transform.position.z - Backward.point.z) * -Dna.BackAttr);
     }
     public void CalcRayCasts()
     {

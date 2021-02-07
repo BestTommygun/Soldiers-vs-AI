@@ -19,7 +19,9 @@ public class DroneCommunications : MonoBehaviour
     {
         for (int i = 0; i < DronesInRange.Count; i++)
         {
-            DronesInRange[i].SendMessage("ReceiveMessage", message);
+            if (DronesInRange[i] != null)
+                DronesInRange[i].SendMessage("ReceiveMessage", message);
+            else DronesInRange.RemoveAt(i);
         }
     }
 
